@@ -23,7 +23,7 @@ coverage.xml
 .venv/
 ENV/
 env/
-
+elm_artifacts.npz
 # Jupyter
 .ipynb_checkpoints/
 
