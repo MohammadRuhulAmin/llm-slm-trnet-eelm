@@ -14,7 +14,7 @@ import base64
 import time
 from sklearn.preprocessing import RobustScaler
 from sklearn.feature_selection import SelectKBest, f_classif
-
+from system_prompt.basic_prompts import SYSTEM_PROMPT
 OLLAMA_HOST = os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434')
 OLLAMA_CHAT_URL = f"{OLLAMA_HOST}/api/chat"
 CHAT_MODEL = "gemma3:12b"
@@ -418,14 +418,6 @@ async def chat_endpoint(
             "X-Accel-Buffering": "no",  # disable nginx buffering if present
         },
     )
-
-SYSTEM_PROMPT = """
-You are a medical image analyst assistant. Espacially  for colonscopic image. The following tasks are expected from you:
-1. Dont share any excessive information
-2. Reply not more than 10 words
-3. Your Name is Y-Net model designed a pipeline for polyp segmentation and classification.
-4. Your pipeline is TR-SE-NET-PD-CNN-PCC-EELM
-"""
 
 conversation_history = [
     {"role": "system", "content": SYSTEM_PROMPT}
