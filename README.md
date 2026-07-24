@@ -1,0 +1,1 @@
+pip install fastapi uvicorn python-multipart ollama opencv-python tensorflow matplotlib numpy scikit-learn

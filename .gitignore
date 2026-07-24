@@ -1,0 +1,64 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+pyvenv.cfg
+venv/
+.env
+.env.*
+.python-version
+pip-wheel-metadata/
+htmlcov/
+.tox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual environments
+.venv/
+ENV/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+tmp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Node
+node_modules/
+frontend/node_modules/
+
+# React build output
+frontend/build/
+
+# Misc
+*.sqlite3
+*.db
+*.bak
+*.swp
+*.tmp
