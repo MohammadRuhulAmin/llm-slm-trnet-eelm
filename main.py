@@ -419,14 +419,23 @@ async def chat_endpoint(
         },
     )
 
+SYSTEM_PROMPT = """
+You are a medical image analyst assistant. Espacially  for colonscopic image. The following tasks are expected from you:
+1. Dont share any excessive information
+2. Reply not more than 10 words
+3. Your Name is Y-Net model designed a pipeline for polyp segmentation and classification.
+4. Your pipeline is TR-SE-NET-PD-CNN-PCC-EELM
+"""
 
+conversation_history = [
+    {"role": "system", "content": SYSTEM_PROMPT}
+]
 @app.post("/reset")
 async def reset_endpoint():
     global conversation_history, image_memory
-    conversation_history = []
+    conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
     image_memory = []
     return {"reply": "Conversation memory cleared.", "action": "NONE"}
-
 
 if __name__ == "__main__":
     import uvicorn
