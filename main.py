@@ -110,9 +110,15 @@ def process_image_and_generate_plot(img, optimal_threshold=0.60):
         clf_probability = 0.85
 
     mask_bin = (pred_mask_spatial > 0.5).astype(np.uint8)
-    mask_3d = np.concatenate([mask_bin] * 3, axis=-1)
+    if mask_bin.ndim > 2:
+        mask_bin = np.squeeze(mask_bin)
+
+    if mask_bin.shape != img_res.shape[:2]:
+        mask_bin = cv2.resize(mask_bin, (img_res.shape[1], img_res.shape[0]), interpolation=cv2.INTER_NEAREST)
+
+    mask_3d = np.stack([mask_bin] * 3, axis=-1)
     extracted = (img_res * mask_3d).astype(np.uint8)
-    detected_img = draw_bounding_box(img_res, pred_mask_spatial)
+    detected_img = draw_bounding_box(img_res, mask_bin)
 
     if clf_probability >= optimal_threshold:
         diagnostic_text = f"DIAGNOSIS: POLYP DETECTED ({clf_probability * 100:.2f}% Match Score)"
