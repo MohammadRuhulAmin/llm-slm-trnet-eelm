@@ -5,7 +5,6 @@ import tensorflow as tf
 from tensorflow.keras import layers
 import cv2
 
-# ── GPU মেমোরি গ্রোথ: প্রসেস লাইফটাইমে একবারই সেট হবে ──
 physical_devices = tf.config.list_physical_devices('GPU')
 if physical_devices:
     try:
@@ -14,7 +13,7 @@ if physical_devices:
     except RuntimeError as e:
         print(e, file=sys.stderr)
 else:
-    print("⚠️ GPU পাওয়া যায়নি! CPU তে চলছে।", file=sys.stderr)
+    print("GPU did not found", file=sys.stderr)
 
 
 @tf.keras.utils.register_keras_serializable()
@@ -27,14 +26,11 @@ class KerasPCCLayer(layers.Layer):
         pcc_matrix = tf.matmul(tf.expand_dims(norm_inputs, -1), tf.expand_dims(norm_inputs, 1))
         return layers.Flatten()(pcc_matrix)
 
-
 def tnr_metric(y_true, y_pred):
     return tf.constant(1.0)
 
-
 def f2_segmentation(y_true, y_pred):
     return tf.constant(1.0)
-
 
 CUSTOM_OBJECTS = {
     "KerasPCCLayer": KerasPCCLayer,
@@ -46,27 +42,19 @@ MODEL_PATH = "/mnt/c/development/Thesis/PolypSegmentationBasedClassification/mod
 
 
 class SegmentationEngine:
-    """FastAPI startup-এ একবার instantiate হবে, এরপর প্রতিটা request শুধু .predict() কল করবে।"""
-
     def __init__(self, model_path: str, img_size: int = 256):
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model path not found: {model_path}")
-
-        print("⏳ Loading Multi-Task Keras Model (একবারই হবে)...", file=sys.stderr)
         full_model = tf.keras.models.load_model(
             model_path, custom_objects=CUSTOM_OBJECTS, compile=False,
         )
-        # শুধু segmentation output head আলাদা করা
         self.model = tf.keras.models.Model(inputs=full_model.input, outputs=full_model.outputs[0])
         self.img_size = img_size
-
-        # 🔥 Warm-up: প্রথম real request-ও slow না হোক, dummy inference দিয়ে graph বানিয়ে রাখা
         dummy = np.zeros((1, img_size, img_size, 3), dtype=np.float32)
         self.model.predict(dummy, verbose=0)
-        print("✅ Model লোড ও Warm-up সম্পন্ন। রেডি ফর রিকোয়েস্ট!", file=sys.stderr)
+        print("✅ Model has been loaded an wormedup successfully", file=sys.stderr)
 
     def predict(self, image_bytes: bytes) -> bytes:
-        """raw image bytes ইন → overlay PNG bytes আউট, পুরোটাই in-memory, ডিস্কে কিছু লেখে না"""
         np_arr = np.frombuffer(image_bytes, np.uint8)
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
         if img is None:

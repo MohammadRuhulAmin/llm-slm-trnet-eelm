@@ -35,7 +35,7 @@ dist/
 *.egg
 
 tmp/
-
+conversations/
 # OS files
 .DS_Store
 Thumbs.db

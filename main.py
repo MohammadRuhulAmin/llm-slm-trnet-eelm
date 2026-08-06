@@ -16,7 +16,7 @@ engine: SegmentationEngine | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global engine
-    engine = SegmentationEngine(MODEL_PATH)   # 🟢 সার্ভার শুরুর সময় একবারই লোড হবে
+    engine = SegmentationEngine(MODEL_PATH)  
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -26,8 +26,20 @@ app.add_middleware(
     allow_methods=["*"], allow_headers=["*"],
 )
 
-conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
-
+#conversation_history = [{"role": "system", "content": SYSTEM_PROMPT}]
+CONV_DIR = "conversations"
+CONV_FILE = os.path.join(CONV_DIR, "chat_history.json")
+def load_conversation_history():
+    if os.path.exists(CONV_FILE):
+        try:
+            with open(CONV_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return [{"role": "system", "content": SYSTEM_PROMPT}]
+def save_conversation_history(history):
+    with open(CONV_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=4)
 @app.get("/")
 async def hellow():
     return {"message": "Welcome to the Chat API!"}
@@ -36,13 +48,12 @@ def sse_pack(event: str, data: dict) -> str:
     return f"event: {event}\ndata: {json.dumps(data)}\n\n"
 
 async def generate_chat_stream(message_text: str, image_bytes: bytes = None):
-    global conversation_history
+    conversation_history = load_conversation_history()
     user_message = message_text.strip()
     full_reply = ""
 
-    if image_bytes:
+    if image_bytes and "overlay" in user_message.lower():
         try:
-            # 🚀 subprocess নেই, cold-start নেই — সরাসরি লোড হয়ে থাকা মডেল দিয়ে inference
             output_png_bytes = await run_in_threadpool(engine.predict, image_bytes)
             b64_encoded = base64.b64encode(output_png_bytes).decode('utf-8')
             yield sse_pack("meta", {"image_data": f"data:image/png;base64,{b64_encoded}"})
@@ -55,6 +66,7 @@ async def generate_chat_stream(message_text: str, image_bytes: bytes = None):
 
     if user_message:
         conversation_history.append({"role": "user", "content": user_message})
+        save_conversation_history(conversation_history)
 
     payload = {"model": CHAT_MODEL, "messages": conversation_history, "stream": True}
     try:
